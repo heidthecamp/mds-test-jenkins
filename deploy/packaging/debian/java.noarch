@@ -1,0 +1,16 @@
+./usr/local/mdsplus/desktop/java/jscope.desktop
+./usr/local/mdsplus/desktop/java/jtraverser.desktop
+./usr/local/mdsplus/desktop/java/jtraverser2.desktop
+./usr/local/mdsplus/java/classes/DeviceBeans.jar
+./usr/local/mdsplus/java/classes/MdsPlus.jar
+./usr/local/mdsplus/java/classes/jDispatcher.jar
+./usr/local/mdsplus/java/classes/jDispatcher.properties
+./usr/local/mdsplus/java/classes/jScope.jar
+./usr/local/mdsplus/java/classes/jScope.properties
+./usr/local/mdsplus/java/classes/jTraverser.jar
+./usr/local/mdsplus/java/classes/jTraverser2.jar
+./usr/local/mdsplus/java/classes/mdsobjects.jar
+./usr/local/mdsplus/java/classes/mdsplus-api.jar
+./usr/local/mdsplus/pixmaps/jscope.png
+./usr/local/mdsplus/pixmaps/jtraverser.png
+./usr/local/mdsplus/pixmaps/jtraverser2.png

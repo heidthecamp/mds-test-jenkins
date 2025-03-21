@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <meta name="author" content="Gianluca.Moro@unipd.it"> 
+  <title>WebScope</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.8/vue.min.js"></script>
+  <!-- Last Plot.ly on 20190320: v1.45.3 -->
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <!-- Version: see variable versionNumber -->
+</head>
+
+<script>
+const versionNumber = '201910230900';
+
+// help message shown when clicking on the header
+const helpMessage = 
+'WebScope - Usage:' +
+'URL:PORT/?htitle=TITLE&panel=NAME1&s=SIGNALNAME&mnext&panel=NAME2&s=SIGNALNAME\n' +
+'\n' +
+'For other information: Gianluca.Moro@igi.cnr.it (frontend), Gabriele.Manduchi@igi.cnr.it (backend)\n' +
+'\n' +
+'- htitle=TITLE: title shown in the header\n' +
+'\n' +
+'Many panels can be present, each with a set of parameters (at least panel,length,s)\n' +
+'- mnext: show another panel in the same line of the previous one\n' +
+'- mnextnl: same as mnext, but starts a new row of panels\n' +
+'- defaultLength=nnn: number of samples if not indicated in panel configuration\n' + 
+'\n' +
+'Panel configuration:\n' +
+'- panel=NAME: name of the panel\n' +
+'- length=nnn: number of samples\n' +
+'- xlabel=LABEL: label of X axis\n' +
+'- ylabel=LABEL: label of Y axis\n' +
+'- s=NAME: name of signal\n' +
+'- c=COLOR: signal color (default: black, can be: yellow,red,blue,cyan,green,...)\n' +
+'\n' +
+'- debug=1: enable debug messages\n' +
+'\n';
+</script>
+
+<body style="margin:3px">
+
+  <!-- the Vue.js app -->
+  <div id="app">
+
+    <header id="mainHeader" style="display:inline;" onclick="alert(helpMessage)">
+
+      <!-- Flag of ITER -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="30" height="20" viewBox="0 0 81 54">
+        <path d="M-.375.075H80.03v53.167H-.375z" fill="#fd8609"/>
+        <ellipse cx="41" cy="54" rx="32" ry="32" fill="#fff"/>
+        <text x="2" y="296" font-weight="bold" font-size="2.8" font-family="sans-serif" fill="#fff">
+        <tspan x="2" y="4">china</tspan>
+        <tspan x="2" y="8">eu</tspan>
+        <tspan x="2" y="12">india</tspan>
+        <tspan x="2" y="16">japan</tspan>
+        <tspan x="2" y="20">korea</tspan>
+        <tspan x="2" y="24">russia</tspan>
+        <tspan x="2" y="28">usa</tspan></text>
+        <text x="32" y="345" font-weight="bold" font-size="18" font-family="sans-serif" fill="#fd8609">
+        <tspan x="32" y="54">iter</tspan></text>
+      </svg>
+
+      <!-- Flag of Europe -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="30" height="20" viewBox="0 0 30 20">
+        <rect width="30" height="20" style="fill:rgb(0%,20%,60%)"/>
+        <path d="M15 15.4L15.7 17.7 13.8 16.3 16.2 16.3 14.3 17.7ZM15 15.4" style="stroke:none;fill:rgb(100%,80%,0%);"/>
+        <path d="M15 2.1L15.7 4.3 13.8 2.9 16.2 2.9 14.3 4.3ZM15 2.1" style="stroke:none;fill:rgb(100%,80%,0%);"/>
+        <path d="M11.7 14.5L12.4 16.8 10.5 15.4 12.9 15.4 10.9 16.8ZM11.7 14.5" style="stroke:none;fill:rgb(100%,80%,0%);"/>
+        <path d="M9.2 12.1L10 14.3 8 12.9 10.4 12.9 8.5 14.3ZM9.2 12.1" style="stroke:none;fill:rgb(100%,80%,0%);"/>
+        <path d="M8.3 8.8L9.1 11 7.1 9.6 9.5 9.6 7.6 11ZM8.3 8.8" style="stroke:none;fill:rgb(100%,80%,0%);"/>
+        <path d="M9.2 5.4L10 7.7 8 6.3 10.4 6.3 8.5 7.7ZM9.2 5.4" style="stroke:none;fill:rgb(100%,80%,0%);"/>
+        <path d="M11.7 3L12.4 5.2 10.5 3.8 12.9 3.8 10.9 5.2ZM11.7 3" style="stroke:none;fill:rgb(100%,80%,0%);"/>
+        <path d="M18.3 14.5L17.6 16.8 19.5 15.4 17.1 15.4 19.1 16.8ZM18.3 14.5" style="stroke:none;fill:rgb(100%,80%,0%);"/>
+        <path d="M20.8 12.1L20 14.3 22 12.9 19.6 12.9 21.5 14.3ZM20.8 12.1" style="stroke:none;fill:rgb(100%,80%,0%);"/>
+        <path d="M21.7 8.8L20.9 11 22.9 9.6 20.5 9.6 22.4 11ZM21.7 8.8" style="stroke:none;fill:rgb(100%,80%,0%);"/>
+        <path d="M20.8 5.4L20 7.7 22 6.3 19.6 6.3 21.5 7.7ZM20.8 5.4" style="stroke:none;fill:rgb(100%,80%,0%);"/>
+        <path d="M18.3 3L17.6 5.2 19.5 3.8 17.1 3.8 19.1 5.2ZM18.3 3" style="stroke:none;fill:rgb(100%,80%,0%);"/>
+      </svg>
+
+      <!-- Flag of India -->
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
+        viewBox="0 0 225 150" width="30" height="20">
+        <rect width="225" height="150" fill="#f93"/><rect width="225" height="50" y="50" fill="#fff"/>
+        <rect width="225" height="50" y="100" fill="#128807"/><g transform="translate(112.5,75)">
+        <circle r="20" fill="#008"/><circle r="17.5" fill="#fff"/><circle r="3.5" fill="#008"/>
+        <g id="d"><g id="c"><g id="b"><g id="a">
+        <circle r="0.875" fill="#008" transform="rotate(7.5) translate(17.5)"/>
+        <path fill="#008" d="M 0,17.5 0.6,7 C 0.6,7 0,2 0,2 0,2 -0.6,7 -0.6,7 L 0,17.5 z"/></g>
+        <use xlink:href="#a" transform="rotate(15)"/></g><use xlink:href="#b" transform="rotate(30)"/></g>
+        <use xlink:href="#c" transform="rotate(60)"/></g><use xlink:href="#d" transform="rotate(120)"/>
+        <use xlink:href="#d" transform="rotate(-120)"/></g>
+      </svg>
+
+      <!-- Flag of Italy -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="30" height="20" viewBox="0 0 3 2">
+        <rect width="1" height="2" fill="#009246"/>
+        <rect width="1" height="2" x="1" fill="#fff"/>
+        <rect width="1" height="2" x="2" fill="#ce2b37"/>
+      </svg>
+
+      <!-- running clock, version, title and shot number -->   
+      <font size="4"><b>
+        {{ currentDate }} {{ currentTime }}
+        <font size="1" color="white">{{ versionNumber }}</font> <!-- hidden -->
+        {{ htitle }} <!-- page title defined by parameter htitle -->
+        <div style="display:inline; float: right;">
+          {{ incomingPacketAnimation[(incomingPacketNumber&1)] }}Shot #{{ lastShotNumber }} 
+        </div>
+      </b></font>
+    </header>
+
+    <!-- graphs su FRAME -->
+<!--
+    <table width="100%" v-for="rowElems in subQuery" cellspacing="0" style="border-collapse: collapse; border:none">
+      <tr>
+        <td v-for="elem in rowElems" style="padding: 0px;">
+          <iframe :src=elem :style="{ height: computedIframeh + 'vh' }"
+                  style="width: 100%; margin:none; padding:none; line-height: 0; border: none; border-spacing: 0;"> 
+            IFRAME not supported by your browser</iframe>
+        </td>
+      </tr>
+    </table>
+-->
+
+    <div> <!-- style="width: 100%; display: inline-block; float: right; border-style: none;" -->
+      <graph-window-list-of-rows :panels="panels" :charts="charts" :restylevent="restylevent">
+      </graph-window-list-of-rows>
+    </div>
+
+  </div> <!-- end of Vue.js app -->
+
+  <!-- template to build GUI -->
+  <template id="graph-window-list-of-rows">
+    <div> <!-- style="width: 100%;" -->
+        <graph-window-list v-for="(panelsinrow, key, index) in panels" :panels="panelsinrow" :charts="charts" 
+          :key="key" :index="index" :restylevent="restylevent"></graph-window-list>
+    </div>
+  </template>
+
+  <!-- template to build GUI -->
+  <template id="graph-window-list">
+    <div>  <!-- style="width: 100%; display:inline;" -->
+        <reactive-chart v-for="(panel, key, index) in panels" :panel="panel" :charts="charts" 
+          :key="key" :index="index" :restylevent="restylevent"></reactive-chart>
+    </div>
+  </template>
+
+  <!-- template to build GUI -->
+  <template id="reactive-chart"> <!-- style="width: 100%;" -->
+    <div :ref="panel.chartUuid" :id=panel.chartUuid style="display: inline-block; margin:1px; border: 1px; border-style: solid; border-color: black;"></div>
+  </template>
+
+<script>
+
+const defaultWindowLength = 120;
+const defaultRowyx = 0;
+const defaultLastShotNumber = -2
+
+const defaultBodyMargin = 3;
+
+//get header occupation -  available infos: width, height, top, bottom, left, right (27px)
+const defaultHeaderHeight = document.getElementById('mainHeader').getBoundingClientRect().bottom;
+const defaultStartingPanelWidth = 150;
+const defaultStartingPanelHeight = 100;
+
+const defaultLineOptionsColor = 'black';
+const defaultLineOptionsWidth = 1;
+const defaultLineOptionsShape = 'line';
+
+const incomingPacketAnimation = ['/', '\\'];
+
+let lastUpdate = Date.now();
+let isThereDataToPlot = false;
+let incomingPacketNumber = 0;
+
+/* GRAPH */
+Vue.component("reactive-chart", {
+  props: ["panel", "charts", "index", "restylevent"],
+  template: '#reactive-chart', 
+  mounted() {
+    //console.log("Read panel infos: chartIndex: ", this.$props.panel.chartIndex);
+    let chart = this.$props.charts[this.$props.panel.chartIndex];
+    Plotly.newPlot(chart.uuid, chart.traces, chart.layout, {displayModeBar: false});
+  },
+  watch: {
+    restylevent: {
+      handler: function() {
+        let chart = this.$props.charts[this.$props.panel.chartIndex];
+        Plotly.react(chart.uuid, chart.traces, chart.layout);
+      }
+    },
+
+    charts: {
+      handler: function() {
+        // limit update frequency to 10Hz (100ms)
+        //if (Date.now() - lastUpdate < 100) {
+        //  //if (this.isDebug == 1) { 
+        //    console.log("charts: skipping plot!!!"); 
+        //  //}
+        //  isThereDataToPlot = true;
+        //  return; 
+        //}
+
+        isThereDataToPlot = false;
+        lastUpdate = Date.now();
+        let chart = this.$props.charts[this.$props.panel.chartIndex];
+        Plotly.react(chart.uuid, chart.traces, chart.layout);
+      },
+      deep: true
+    }
+  }
+});
+/* End GRAPH */
+
+Vue.component('graph-window-list', {
+  template: '#graph-window-list',
+  props: ['panels', 'charts', 'restylevent']
+})
+
+Vue.component('graph-window-list-of-rows', {
+  template: '#graph-window-list-of-rows',
+  props: ['panels', 'charts', 'restylevent']
+})
+
+var vm = new Vue({
+  el: '#app',
+  data: function () {
+    return {
+      htitle: '',         // header title
+      currentDate: '',    // clock management
+      currentTime: '',    // time management
+      lastShotNumber: -2, // current shot
+      defaultLength: defaultWindowLength,
+      isDebug: 0,
+      restylevent: null,
+
+      charts: [
+      /* array of charts, mapped to corresponding panel via uuid
+        {
+         uuid: "Temperature",
+         traces: [
+           {
+             x: [],
+             y: [],
+             line: {
+               color: defaultLineOptionsColor,
+               width: defaultLineOptionsWidth,
+               shape: defaultLineOptionsShape,
+             },
+           }
+         ],
+         layout: {
+           title: {
+             text:'WebScope',
+             y: 1,
+             yanchor: "top",
+             pad: {t:5},
+             font: {
+               family: 'Courier New, monospace',
+               size: 24
+           },
+           showlegend: false,
+           xaxis: { title: 'x' },
+           yaxis: { title: 'y' },
+         },
+       } */
+      ],
+
+      panels: [
+      /* array of array: each elementis an array of panels to be fitted in a row
+       { name: 'Temperature',
+         windowLength: defaultWindowLength,
+         width: defaultStartingPanelWidth;
+         height: defaultStartingPanelHeight;
+         xlabel: '',
+         ylabel: '',
+         rowypx: 0,
+         chartIndex: -1,
+         signals: [
+           { name: 'p1s1', lastShotNumber: -2, color: 'red' },
+           { name: 'p1s2', lastShotNumber: -2, color: 'blue' },
+           { name: 'p2s1', lastShotNumber: -2, color: 'green' },
+         ]},
+      */
+      ],
+
+    } // end return
+  },
+
+  //computed: {
+  //  computedIframeh() {
+  //      return ( Math.floor(90 / this.mpanels.length) ); 
+  //  },
+  //},
+
+  // TODO: check if there is a missing panelName?
+
+  created() {
+    window.addEventListener('resize', this.handleResize)
+
+    // parse URL parameters
+    var url = window.location.href;
+    var parser = document.createElement('a');
+    parser.href = url;
+    var query = parser.search.substring(1);
+    var vars = query.split('&');   
+    for (var i = 0; i < vars.length; i++) {
+	var pair = vars[i].split('=');
+        if (pair[0] == "htitle") this.htitle = decodeURIComponent(pair[1]);
+        if (pair[0] == "debug") this.isDebug = decodeURIComponent(pair[1]);
+        if (pair[0] == "defaultLength" || pair[0] == "defaultlength") 
+          this.defaultLength = decodeURIComponent(pair[1]);
+    }
+    if (this.isDebug) { console.log("Page initialization with parameters: ", query); }
+
+    this.panels = query.split("mnextnl").map(row =>
+      row.split("mnext").map(pan => {
+            let vars = pan.split('&');   
+            let ausName = 'defaultName'; 
+            let ausWindowLength = this.defaultLength; 
+            let ausS = []; 
+            let ausC = [];
+            let ausXlabel = ''; 
+            let ausYlabel = ''; 
+            let ausRowypx = defaultRowyx;
+            for (var i = 0; i < vars.length; i++) {
+              var pair = vars[i].split('=');
+	      switch (pair[0]) {
+                case "panel":  ausName = decodeURIComponent(pair[1]); break;
+                case "length": ausWindowLength = decodeURIComponent(pair[1]); break;
+                case "s":      ausS.push(decodeURIComponent(pair[1])); break;
+                case "c":      ausC.push(decodeURIComponent(pair[1])); break;
+                case "xlabel": ausXlabel = decodeURIComponent(pair[1]); break;
+                case "ylabel": ausYlabel = decodeURIComponent(pair[1]); break;
+                case "rowypx": ausRowypx = decodeURIComponent(pair[1]); break;
+              }
+            }
+            return { name:ausName, 
+                     windowLength: ausWindowLength, 
+                     width: defaultStartingPanelWidth,
+                     height: defaultStartingPanelHeight,
+                     xlabel:ausXlabel, 
+                     ylabel:ausYlabel, 
+                     rowypx:ausRowypx,
+                     chartIndex:-1,
+                     signals: ausS.map(function (s,i) {
+                                return { name:s, 
+                                         lastShotNumber: defaultLastShotNumber, 
+                                         color: (typeof ausC[i] === 'undefined')?'black':ausC[i]};
+                                       })
+                   };
+      })
+    );
+
+    if (this.isDebug) { 
+      console.log("Configuration: htitle=" + this.htitle + " panels=", this.panels, " debug=" + this.isDebug); 
+    }
+
+    this.startGraph();
+
+  },
+
+  destroyed() {
+    window.removeEventListener('resize', this.handleResize)
+  },
+
+  methods: {
+
+    computeChartHeightWidth: function() {
+      let globalH = window.innerHeight; // defaultHeaderHeight
+      let globalW = window.innerWidth;
+
+      if (this.isDebug == 1) { console.log("Window size (h,w): " + globalH + "," + globalW); }
+      let numberOfRows = this.panels.length;
+      let heightOfRow = Math.trunc((globalH-defaultHeaderHeight-10*numberOfRows)/numberOfRows);
+      for (var i=0; i<this.panels.length; i++) {
+        let widthOfRow = Math.trunc((globalW-2*defaultBodyMargin-4*this.panels[i].length)/this.panels[i].length);
+        for (var j=0; j<this.panels[i].length; j++) {
+          this.panels[i][j].height = heightOfRow;
+          this.panels[i][j].width = widthOfRow;
+        }
+      }
+
+    },
+
+    updateChartHeightWidth: function() {
+      for (var i=0; i<this.panels.length; i++) {
+        for (var j=0; j<this.panels[i].length; j++) {
+          let index = this.panels[i][j].chartIndex;
+          this.charts[index].layout.height = this.panels[i][j].height;
+          this.charts[index].layout.width = this.panels[i][j].width;
+        }
+      }
+    },
+
+    handleResize: function() {
+      this.computeChartHeightWidth();
+      this.updateChartHeightWidth();
+    },
+
+    multiUpdateChart: function (msgArray) {
+      // if (this.isDebug == 1) { console.log('multiUpdateChart: RECEIVED ' + msgArray); }
+      let numberOfMulti = parseInt(msgArray[0]);
+      // if (this.isDebug == 1) { console.log('multiUpdateChart: PACKETS: ' + numberOfMulti); }
+      // remove first element - which is the number of packets
+      let managedElements = 1;
+      for (var i=0; i<numberOfMulti; i++) {
+        // console.log("multiUpdateChart: pacchetto: " + i);
+        for(var h = 0; h < managedElements; h++)
+          msgArray.shift();
+//        msgArray.shift(0, managedElements);
+        managedElements = this.updateChart(msgArray);
+        // console.log("multiUpdateChart: FINE pacchetto: " + i);
+      }
+    },
+
+    updateChart: function (msgArray) {
+      var msgProgressiveId = msgArray[0];
+      var msgShotNumber    = msgArray[1];
+      var msgSignalName    = msgArray[2];
+      if(this.isDebug == 1) console.log("UPDATE CART!!!!!!!!!!!!!!!!!!!!!! signal name: " + msgSignalName + " format: " + msgArray[3]);
+      var msgFormat        = msgArray[3].toUpperCase(); 
+                             // "L" date as UTC, "F" date as float, "A" date as float and reset array
+      var msgLength        = parseInt(msgArray[4]);
+
+      //if (msgArray.length != 5 + 2*msgLength) {
+      //  console.log("Wrong format for incoming message: " + receivedMsg);
+      //  return; // something wrong - cannot parse message
+      //}
+      let managedElements = 5 + 2*msgLength;
+      let msgLabels = msgArray.slice(5, 5+msgLength);
+      switch (msgFormat) {
+        case "L": 
+          msgLabels = msgLabels.map(function (x) { return (new Date(parseInt(x))); }); 
+          break;
+        case "F":
+        case "A":
+          msgLabels = msgLabels.map(function (x) { return (parseFloat(x)); }); 
+          break;
+      }
+      let msgValues = msgArray.slice(5+msgLength, 5+2*msgLength);
+
+      if(this.isDebug == 1) console.log('Cerco '+msgSignalName);
+      for (var i=0; i<this.panels.length; i++) {
+       for (var k=0; k<this.panels[i].length; k++) {
+	for (var j=0; j<this.panels[i][k].signals.length; j++) {
+          if (this.panels[i][k].signals[j].name == msgSignalName) {
+              if(this.isDebug == 1) console.log('Trovato '+j + ' '+i+' '+k+' '+msgSignalName);
+            //
+            // we found the incoming signal in this panel
+            //
+            let chartIndex = this.panels[i][k].chartIndex;
+ 	    this.charts[chartIndex].traces[j].name = msgSignalName;
+            if (msgFormat == "A" || this.panels[i][k].signals[j].lastShotNumber != msgShotNumber) {
+              this.charts[chartIndex].traces[j].x = msgLabels;
+              this.charts[chartIndex].traces[j].y = msgValues;
+            } else {
+              var len = this.charts[chartIndex].traces[j].x.length;
+              if (len == 0 || msgLabels[0] >= this.charts[chartIndex].traces[j].x[len-1]) {
+                this.charts[chartIndex].traces[j].x = this.charts[chartIndex].traces[j].x.concat(msgLabels);
+                this.charts[chartIndex].traces[j].y = this.charts[chartIndex].traces[j].y.concat(msgValues);
+                if (this.isDebug == 1) console.log('Aggiorno chart '+chartIndex);
+              } else {
+                if (this.isDebug == 1) { 
+                  console.log("Skipping len=" + len + " msgLabels[0]=" + msgLabels[0] + 
+                              " this.charts[chartIndex].traces[j].x[len-1]=" + 
+                              this.charts[chartIndex].traces[j].x[len-1] + 
+                              " type:" + typeof msgLabels[0]); }
+              }
+            }
+            this.panels[i][k].signals[j].lastShotNumber = msgShotNumber;
+            this.lastShotNumber = msgShotNumber;
+
+            if (this.panels[i][k].windowLength > 0 && 
+                this.charts[chartIndex].traces[j].x.length > this.panels[i][k].windowLength) {
+              this.charts[chartIndex].traces[j].x = this.charts[chartIndex].traces[j].x.slice(-this.panels[i][k].windowLength);
+              this.charts[chartIndex].traces[j].y = this.charts[chartIndex].traces[j].y.slice(-this.panels[i][k].windowLength);
+            }
+
+            /// if windowLength is fixed, keep always that size, even if no data is present
+            if (this.panels[i][k].windowLength > 0) {
+//              if (this.isDebug == 1) { console.log("updateChart: chartIndex=" + chartIndex + " arr[0]=" + arr[0] + "") }
+              var arr = this.charts[chartIndex].traces[j].x;
+              this.charts[chartIndex].layout.xaxis.range = [ arr[0], arr[arr.length-1] ];
+            }
+            this.charts[chartIndex].layout.datarevision = new Date().getTime(); // timestamp of last update
+          }
+        }
+       } // end for panel row
+      } // end for panel complete
+      return managedElements;
+    }, // end updateChart
+
+    /* function to start SSE */
+    ServerSentEventStart: function (signals) {
+      if (this.isDebug == 1) { console.log("Starting ServerSentEventStart for " + signals); }
+      var eventSource = new EventSource("/sse?" + signals);
+      var callbackFunc = this.multiUpdateChart;
+      var localDebug = this.isDebug;
+      eventSource.onmessage = function (event) {
+        var received_msg = event.data.replace(/\s+/g, ' '); // remove multi-spaces
+        incomingPacketNumber++;
+        if (localDebug >= 1) { console.log('EVENT RECEIVED: ' + incomingPacketNumber+ '  '+received_msg); }
+        // example: RECEIVED: 2698 666 p1s1 F 1 2870.000000 -8.979409
+        // example: RECEIVED: 1403 666 ccci L 1 1553705772843 8.614104
+        callbackFunc(received_msg.split(" "));
+      };
+    },
+
+    startGraph: function() {
+      // init graph structure
+      this.charts = [];
+      for (var i=0; i<this.panels.length; i++) { // for all the rows
+        for (var j=0; j<this.panels[i].length; j++) { // for all the panels in this row
+          let tpij = this.panels[i][j];
+          let chartUuid = tpij.name + "_r" + i + "c" + j;
+          this.charts.push({
+            uuid: chartUuid,
+            traces: tpij.signals.map(function (s,sIndex) { return {
+                x: [],
+                y: [],
+                line: { color: tpij.signals[sIndex].color, 
+                        width: defaultLineOptionsWidth, 
+                        shape: defaultLineOptionsShape },
+              }}),
+            layout: {
+                title: {text: tpij.name, y:1, yanchor: "top", pad: {t:2}, font: {size: 10}},
+                showlegend: false,
+                margin: { l:40,r:10,t:10,b:30 },
+                xaxis: { title: tpij.xlabel },
+                yaxis: { title: tpij.ylabel },
+                height: tpij.height,
+                width: tpij.width,
+
+              },
+            });
+          this.panels[i][j].chartIndex = this.charts.length - 1;
+          this.panels[i][j].chartUuid = chartUuid;
+        } // end for panels - row
+      } // end for panels - complete
+
+      this.handleResize();
+
+      setInterval( function() { 
+        if (isThereDataToPlot) {
+          isThereDataToPlot = false;
+          this.restylevent = new Date().getTime(); // timestamp of last update
+        }
+      }.bind(this), 1000);
+
+      if (this.isDebug) { console.log("Starting with charts: ", this.charts); }
+
+      // start Server    
+      this.restylevent = new Date().getTime(); // timestamp of last update
+      // example string: "signals=s1,s2,s3"
+      this.ServerSentEventStart("signals=" + 
+        this.panels.flat().map(p => p.signals).flat().map(x => x.name).join(",")); 
+    },
+  },
+
+
+});
+
+<!-- clock management -->
+const week = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+function pad0(i) { 
+  return (i<10?"0"+i:i); 
+}
+function updateTime() {
+  var cd = new Date();
+  vm.currentTime = pad0(cd.getHours()) + ':' + pad0(cd.getMinutes()) + ':' + pad0(cd.getSeconds());
+  vm.currentDate = pad0(cd.getDate()) + '/' + pad0(cd.getMonth()+1) + '/' + cd.getFullYear() + ' ' + week[cd.getDay()];
+  setTimeout(updateTime, 1000);
+};
+updateTime();
+<!-- END OF clock management -->
+
+</script>
+
+</body>
+</html>

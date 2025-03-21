@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- 
+     Copyright (c) 2017, Massachusetts Institute of Technology All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+
+Redistributions in binary form must reproduce the above copyright notice, this
+list of conditions and the following disclaimer in the documentation and/or
+other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<messages>
+  <facility name="Server" value="4065">
+    <status name="NOT_DISPATCHED" value="4097" severity="Warning" text="action not dispatched, depended on failed action"/>
+    <status name="INVALID_DEPENDENCY" value="4098" severity="Error" text="action dependency cannot be evaluated"/>
+    <status name="CANT_HAPPEN" value="4099" severity="Error" text="action contains circular dependency or depends on action which was not dispatched"/>
+    <status name="INVSHOT" value="4100" severity="Error" text="invalid shot number, cannot dispatch actions in model"/>
+    <status name="ABORT" value="4102" severity="Error" text="Server action was aborted"/>
+    <status name="PATH_DOWN" value="4104" severity="Error" text="Path to server lost"/>
+    <status name="SOCKET_ADDR_ERROR" value="4105" severity="Error" text="Cannot obtain ip address socket is bound to."/>
+    <status name="INVALID_ACTION_OPERATION" value="4106" severity="Error" text="Unknown action operation."/>
+  </facility>
+</messages>

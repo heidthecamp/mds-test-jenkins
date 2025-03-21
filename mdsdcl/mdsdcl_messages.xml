@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- 
+     Copyright (c) 2017, Massachusetts Institute of Technology All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+
+Redistributions in binary form must reproduce the above copyright notice, this
+list of conditions and the following disclaimer in the documentation and/or
+other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<messages>
+  <facility name="Mdsdcl" value="2050">
+    <status name="SUCCESS" value="1" severity="Success" text="Normal successful completion"/>
+    <status name="EXIT" value="2" severity="Success" text="Normal exit"/>
+    <status name="ERROR" value="3" severity="Warning" text="Unsuccessful execution of command"/>    
+    <status name="NORMAL" value="101" severity="Success" text="Normal successful completion"/>
+    <status name="PRESENT" value="102" severity="Success" text="Entity is present"/>
+    <status name="IVVERB" value="103" severity="Error" text="No such command"/>
+    <status name="ABSENT" value="104" severity="Warning" text="Entity is absent"/>
+    <status name="NEGATED" value="105" severity="Warning" text="Entity is present but negated"/>
+    <status name="NOTNEGATABLE" value="106" severity="Error" text="Entity cannot be negated"/>
+    <status name="IVQUAL" value="107" severity="Error" text="Invalid qualifier"/>
+    <status name="PROMPT_MORE" value="108" severity="Error" text="More input required for command"/>
+    <status name="TOO_MANY_PRMS" value="109" severity="Error" text="Too many parameters specified"/>
+    <status name="TOO_MANY_VALS" value="110" severity="Error" text="Too many values"/>
+    <status name="MISSING_VALUE" value="111" severity="Error" text="Qualifier value needed"/>
+  </facility>
+</messages>

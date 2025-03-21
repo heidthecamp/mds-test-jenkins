@@ -1,0 +1,100 @@
+
+###
+### Generated files
+###
+
+# configure_file()
+_include/_mdsversion.h
+mdsdcl/mdsdclVersionInfo.c
+pydevices/*/_version.py
+python/MDSplus/_version.py
+
+# deploy/gen-messages-exceptions.py
+include/treeshr_messages.h
+include/tdishr_messages.h
+include/mdsshr_messages.h
+include/tcl_messages.h
+include/camshr_messages.h
+include/servershr_messages.h
+include/mitdevices_messages.h
+include/mdsdcl_messages.h
+python/MDSplus/mdsExceptions.py
+mdsshr/MdsGetStdMsg.c
+java/mdsplus-api/src/main/java/mds/MdsException.java
+
+# deploy/gen-include-tdishr.py
+include/tdishr.h
+
+# deploy/gen-include-opcbuiltins.py
+include/opcbuiltins.h
+
+# deploy/gen-python-compound.py
+python/MDSplus/compound.py
+
+# deploy/gen-tdishr-TdiHash.py
+tdishr/TdiHash.c
+
+# deploy/gen-yacc-lex.py
+mdsdcl/cmdParse.c
+mdsdcl/cmdParseLex.c
+mdsdcl/dcllex.h
+mdsdcl/dclyacc.h
+mdsdcl/mdsdclDeltatimeToSeconds.c
+mdsdcl/ocldToXml.c
+tdishr/TdiLex.c
+tdishr/tdilex.h
+tdishr/TdiYacc.c
+tdishr/tdiyacc.h
+treeshr/TreeFindNodeWild.c
+
+# python
+*.pyc
+__pycache__/
+*.egg-info
+
+# motif
+*.uid
+
+# yacc verbose
+*.output
+
+###
+### Editors
+###
+
+# visual studio code
+.vscode/
+.cache/
+
+# visual studio
+.vs/
+
+# eclipse
+eclipse/
+target/
+.project
+.settings/
+.classpath
+
+# vi
+*~
+*.swp
+
+# emacs
+\#*#
+
+###
+### Misc
+###
+
+[Bb]uild/
+workspace*/
+Testing/Temporary
+mitdevices/acq_root_filesystem/ffs/user/MitFilesDate
+
+# valgrind
+core.*
+vgcore.*
+
+# deploy/trigger.sh output
+trigger.opts
