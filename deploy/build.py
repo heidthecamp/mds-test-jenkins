@@ -18,8 +18,11 @@ import subprocess
 
 from datetime import datetime
 
+# Get the path to this script
+build_py_path = os.path.abspath(__file__)
+
 # Get the path to deploy/
-deploy_dir = os.path.dirname(os.path.abspath(__file__))
+deploy_dir = os.path.dirname(build_py_path)
 
 # Get the path to the root of the repository
 source_dir = os.path.dirname(deploy_dir)
@@ -537,7 +540,7 @@ def do_interactive():
     with open(do_install_filename, 'wt') as file:
         file.write('#!/bin/bash\n')
         file.write(f'cd "{source_dir}"\n')
-        file.write(f'{sys.executable} "{__file__}" --workspace="{args.workspace}" --no-configure --no-build --test "$@"\n')
+        file.write(f'{sys.executable} "{build_py_path}" --workspace="{args.workspace}" --no-configure --no-build --test "$@"\n')
     os.chmod(do_install_filename, 0o755)
 
     do_install_filename = os.path.join(args.workspace, 'do-install.sh')
@@ -637,7 +640,7 @@ def do_docker():
     passthrough_args.extend(cmake_args)
 
     # TODO: Detect python3 instead of assuming it?
-    command = f"python3 {__file__} {' '.join(passthrough_args)}"
+    command = f"python3 {build_py_path} {' '.join(passthrough_args)}"
 
     docker_entrypoint = [ '/bin/bash', '-c', command ]
 
