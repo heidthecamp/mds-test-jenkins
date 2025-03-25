@@ -110,9 +110,9 @@ parser.add_argument(
 
 parser.add_argument(
     '--relative-def',
-    default='\CMOD::TOP.ELECTRONS.ECE',x.py
-[cmake] Missing 'treeshr/TreeFindNodeWild.c', will run /usr/bin/python3.12 deploy/gen-yacc-lex.py
-[cmake] -- Running /usr/bin/python3.12 deploy/gen-yacc-lex.py
+    default='\CMOD::TOP.ELECTRONS.ECE',
+    help='An expression to change the default position in the tree'
+)
 
 parser.add_argument(
     '--relative',
