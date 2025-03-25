@@ -211,7 +211,7 @@ mdsplus_option(
 mdsplus_option(
     ENABLE_SYBASE BOOL
     "Build mdssql library, and Sybase support in TDI."
-    DEFAULT OFF
+    DEFAULT ON
 )
 
 mdsplus_option(
