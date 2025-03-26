@@ -1671,7 +1671,7 @@ root.attrib['failures'] = str(tests_failed_count)
 
 testsuite = xml.SubElement(root, 'testsuite')
 # testsuite.attrib['time'] = str(total_time_test)
-testsuite.attrib['name'] = args.junit_suite_name
+testsuite.attrib['name'] = 'IDL test suite'
 
 for test in all_tests:
     testcase = xml.SubElement(testsuite, 'testcase')
