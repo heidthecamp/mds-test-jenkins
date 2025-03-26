@@ -1689,7 +1689,7 @@ for test in all_tests:
         failure.attrib['message'] = 'Failed'
 
 
-junit_filename = os.path.join('workspace', 'mdsplus-junit.xml') # TODO: FIX THIS
+junit_filename = 'mdsplus-junit.xml'
 print(f'Writing jUnit XML to {junit_filename}')
 with open(junit_filename, 'wb') as file:
     file.write(xml.tostring(root))
