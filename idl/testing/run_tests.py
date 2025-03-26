@@ -1679,7 +1679,7 @@ for test in all_tests:
     testcase.attrib['time'] = str(test.time)
 
     system_out = xml.SubElement(testcase, 'system-out')
-    system_out.text = open(test['log'], 'rt').read()
+    system_out.text = open(test.logfile, 'rt').read()
     
     # The BEL character causes issues when loaded into Jenkins
     system_out.text = system_out.text.replace('\x07', '')
