@@ -1684,7 +1684,7 @@ for test in all_tests:
     # The BEL character causes issues when loaded into Jenkins
     system_out.text = system_out.text.replace('\x07', '')
 
-    if not test['passed']:
+    if not test.passed:
         failure = xml.SubElement(testcase, 'failure')
         failure.attrib['message'] = 'Failed'
 
