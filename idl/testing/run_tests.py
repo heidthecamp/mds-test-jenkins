@@ -1676,7 +1676,7 @@ testsuite.attrib['name'] = 'IDL test suite'
 for test in all_tests:
     testcase = xml.SubElement(testsuite, 'testcase')
     testcase.attrib['name'] = test.name
-    testcase.attrib['time'] = str(test.time)
+    testcase.attrib['time'] = str(test.time.total_seconds())
 
     system_out = xml.SubElement(testcase, 'system-out')
     system_out.text = open(test.logfile, 'rt').read()
