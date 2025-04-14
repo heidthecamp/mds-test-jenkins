@@ -18,11 +18,8 @@ import subprocess
 
 from datetime import datetime
 
-# Get the path to this script
-build_py_path = os.path.abspath(__file__)
-
 # Get the path to deploy/
-deploy_dir = os.path.dirname(build_py_path)
+deploy_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Get the path to the root of the repository
 source_dir = os.path.dirname(deploy_dir)
@@ -74,6 +71,10 @@ parser.add_argument(
     '--workspace',
     help='The directory that will contain the default build/install directories and helper scripts, defaults to `workspace/` or `workspace-{--os}/` if --os is specified. This will be relative to the source directory unless an absolute path is given.',
 )
+
+parser.add_argument(
+    '--env-file',
+    help='Path to a file containing additional environment variables to set in the form of NAME=VALUE. For docker builds, this will be evaluated inside the docker container.')
 
 parser.add_argument(
     '-i', '--interactive',
@@ -237,6 +238,7 @@ args, cmake_args = parser.parse_known_args()
 if args.os is not None:
 
     opts_filename = os.path.join(deploy_dir, f'os/{args.os}.opts')
+    env_filename = os.path.join(deploy_dir, f'os/{args.os}.env')
 
     if not os.path.exists(opts_filename):
         print(f'Unsupported --os={args.os}, ensure that deploy/os/{args.os}.opts exists.')
@@ -249,13 +251,14 @@ if args.os is not None:
     
     opts = open(opts_filename).read().strip().split()
 
-    # TODO: env files
-
     opts_args, cmake_opts_args = parser.parse_known_args(args=opts)
 
     # To allow command-line arguments to override those from .opts files, we need to parse them again after parsing the .opts ones
     args, cmake_args = parser.parse_known_args(namespace=opts_args)
     cmake_args = cmake_opts_args + cmake_args
+
+    if os.path.exists(env_filename):
+        args.env_file = env_filename
 
     if os_alias is not None:
         print()
@@ -323,6 +326,21 @@ dist_dir = os.path.join(args.workspace, 'dist')
 
 # System Configuration
 
+# Environment variables must be handled before finding any programs
+if args.env_file is not None and args.dockerimage is None:
+    lines = open(args.env_file).readlines()
+    for line in lines:
+        name, value = line.split('=', maxsplit=1)
+        
+        # TODO: Improve
+        result = subprocess.run(
+            ['/bin/bash', '-c', f"echo {value}"],
+            stdout=subprocess.PIPE,
+        )
+        value = result.stdout.decode().strip()
+
+        os.environ[name] = value
+
 cmake = shutil.which('cmake')
 if cmake is None and args.dockerimage is not None:
     print('Unable to find `cmake`')
@@ -375,6 +393,9 @@ def build_command_line():
                 # elif name in ['configure', 'build', 'test', 'install', 'package']:
                 elif name in ['build']:
                     cli_args.append(f'--no-{name}')
+            elif type(value) is list:
+                for item in value:
+                    cli_args.append(f'--{name}={item}')
             else:
                 cli_args.append(f'--{name}={value}')
 
@@ -540,7 +561,7 @@ def do_interactive():
     with open(do_install_filename, 'wt') as file:
         file.write('#!/bin/bash\n')
         file.write(f'cd "{source_dir}"\n')
-        file.write(f'{sys.executable} "{build_py_path}" --workspace="{args.workspace}" --no-configure --no-build --test "$@"\n')
+        file.write(f'{sys.executable} "{__file__}" --workspace="{args.workspace}" --no-configure --no-build --test "$@"\n')
     os.chmod(do_install_filename, 0o755)
 
     do_install_filename = os.path.join(args.workspace, 'do-install.sh')
@@ -553,6 +574,7 @@ def do_interactive():
     with open(setup_filename, 'wt') as file:
         file.write('#!/bin/bash\n') # TODO: Remove?
         file.write(f'export MDSPLUS_DIR=\"{usr_local_mdsplus_dir}\"\n')
+        file.write(f'export PYTHONPATH=\"{usr_local_mdsplus_dir}/python\"\n')
         file.write('source $MDSPLUS_DIR/setup.sh\n')
     os.chmod(setup_filename, 0o755)
 
@@ -566,9 +588,18 @@ def do_interactive():
 
     git_tag_command = 'git describe --abbrev=0 --tag'
 
+    # Start with a clean environment so we don't inherit anything pointing to the system MDSplus installation
+    interactive_env = dict()
+    interactive_env['HOME'] = os.environ['HOME']
+    interactive_env['TERM'] = os.environ['TERM']
+
+    # Allow XQuartz and X-Forwarding to work from the interactive shell
+    if 'DISPLAY' in os.environ:
+        interactive_env['DISPLAY'] = os.environ['DISPLAY']
+
     # Override shell prompt to ease confusion
     # \w is the "current working directory"
-    os.environ['PS1'] = f'\n{purple}[interactive]{reset} {green}\\w{reset} {turquoise}($({git_tag_command})){reset}\n\\$ '
+    interactive_env['PS1'] = f'\n{purple}[interactive]{reset} {green}\\w{reset} {turquoise}($({git_tag_command})){reset}\n\\$ '
 
     print()
     print('Spawning a new shell, type `exit` to leave.')
@@ -577,6 +608,7 @@ def do_interactive():
     subprocess.run(
         [ shell, '--login', '--noprofile' ],
         cwd=args.workspace,
+        env=interactive_env,
     )
 
 def do_docker():
@@ -640,7 +672,7 @@ def do_docker():
     passthrough_args.extend(cmake_args)
 
     # TODO: Detect python3 instead of assuming it?
-    command = f"python3 {build_py_path} {' '.join(passthrough_args)}"
+    command = f"python3 {os.path.abspath(__file__)} {' '.join(passthrough_args)}"
 
     docker_entrypoint = [ '/bin/bash', '-c', command ]
 
@@ -875,9 +907,16 @@ def do_package():
             )
             args.arch = result.stdout.decode().strip()
 
-        if args.platform == 'redhat':
+        elif args.platform == 'redhat':
             result = subprocess.run(
                 [ '/usr/bin/rpm', '-E', '%{_arch}' ],
+                stdout=subprocess.PIPE
+            )
+            args.arch = result.stdout.decode().strip()
+        
+        elif args.platform.startswith('macosx'):
+            result = subprocess.run(
+                [ '/usr/bin/uname', '-m' ],
                 stdout=subprocess.PIPE
             )
             args.arch = result.stdout.decode().strip()
@@ -1183,7 +1222,7 @@ def do_test():
 if args.dockerimage is not None:
     do_docker()
 else:
-        
+
     if args.interactive:
         do_interactive()
 

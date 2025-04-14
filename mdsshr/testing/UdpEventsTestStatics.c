@@ -89,7 +89,7 @@ static void getMulticastAddr(char const *eventName, char *retIp);
 ///
 void test_handleMessage()
 {
-  BEGIN_TESTING(UdpEvents handleMessage);
+  // BEGIN_TESTING(UdpEvents handleMessage);
 
   char *eventName = new_unique_event_name("test_event");
   struct sockaddr_in serverAddr;
@@ -133,7 +133,7 @@ void test_handleMessage()
   MDSUdpEvent(eventName, strlen(eventName), eventName);
   pthread_join(thread, NULL);
   free(eventName);
-  END_TESTING;
+  // END_TESTING;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

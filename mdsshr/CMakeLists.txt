@@ -53,11 +53,19 @@ target_compile_definitions(
 )
 
 if(WIN32)
-    TARGET_LINK_LIBRARIES(
+    target_link_libraries(
         MdsShr
         PUBLIC
             iphlpapi
             ws2_32
+    )
+endif()
+
+if(TARGET LibFFI::LibFFI)
+    target_link_libraries(
+        MdsShr
+        PUBLIC
+            LibFFI::LibFFI
     )
 endif()
 

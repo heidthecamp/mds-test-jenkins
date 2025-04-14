@@ -4,8 +4,6 @@ import os
 import subprocess
 import argparse
 import tempfile
-import threading
-from datetime import datetime
 
 # The default values are intended to be used from within the PSFC network
 # If you want to run these tests on your own infrastructure, provide the
@@ -111,7 +109,7 @@ parser.add_argument(
 
 parser.add_argument(
     '--relative-def',
-    default='\CMOD::TOP.ELECTRONS.ECE',
+    default='\\CMOD::TOP.ELECTRONS.ECE',
     help='An expression to change the default position in the tree'
 )
 
@@ -129,7 +127,7 @@ parser.add_argument(
 
 parser.add_argument(
     '--reset-def',
-    default='\CMOD::TOP',
+    default='\\CMOD::TOP',
     help='An expression to reset the default position to the top of the tree'
 )
 
@@ -154,7 +152,7 @@ parser.add_argument(
 
 parser.add_argument(
     '--wildcard-value',
-    default='\CMOD::TOP.DNB.MIT_CXRS:CPLD_START',
+    default='\\CMOD::TOP.DNB.MIT_CXRS:CPLD_START',
     help='The value of evaluating the --wildcard expression, ignoring leading/trailing whitespace'
 )
 
@@ -233,6 +231,7 @@ parser.add_argument(
 
 args = parser.parse_args()
 
+
 #---------------------------------------------------------------------------
 # Each IDL write test should start with a clean tree.
 # Write tests use a local tree, but eventually will be upgraded to use mdsip.
@@ -259,136 +258,99 @@ def build_write_tree(tree, shot):
     t.write()
     t.close()
 
-tests_failed_count = 0
 
-class IDLTest(threading.Thread):
+# Temporary directory for transient test scripts and artifacts
+TEST_DIR = tempfile.TemporaryDirectory(prefix='test_idl_', dir='/tmp')
+os.environ['default_tree_path'] = TEST_DIR.name
+os.environ['IDL_PATH'] = os.getenv('IDL_PATH') + ':' + TEST_DIR.name
 
-    def __init__(self, name, code, expected_output):
-        super(IDLTest, self).__init__(name=name)
+build_write_tree(args.write_tree, args.write_shot)
 
-        self.name = name
-        self.code = code
-        self.expected_output = expected_output
-        self.passed = False
+all_tests_passed = True
+def idl_test(code, expected_output):
+    global all_tests_passed
 
-        self.time = 0
+    code_lines = [ line.strip() for line in code.splitlines() ]
+    code_lines = list(filter(None, code_lines))
+    code = '\n'.join(code_lines)
 
-        self.logfile = os.path.join(os.getcwd(), f'{self.name}.log')
+    # Running IDL code at the IDL> prompt vs running it as a script causes
+    # weird differences in the evaluation, so we use a test.pro file
 
-    def run(self):
-        start_time = datetime.now()
+    code = 'pro test\n' + code + '\nend'
+    test_file = TEST_DIR.name + '/test.pro'
+    open(test_file, 'wt').write(code)
 
-        log = open(self.logfile, 'wt')
+    expected_lines = [ line.strip() for line in expected_output.splitlines() ]
+    expected_lines = list(filter(None, expected_lines))
 
-        # Temporary directory for transient test scripts and artifacts
-        TEST_DIR = tempfile.TemporaryDirectory(prefix='test_idl_', dir='/tmp')
+    print('Running:')
+    for line in code_lines:
+        print(f'IDL> {line}')
+    print()
 
-        code_lines = [ line.strip() for line in self.code.splitlines() ]
-        code_lines = list(filter(None, code_lines))
-        code = '\n'.join(code_lines)
+    print('Expected:')
+    for line in expected_lines:
+        print(line)
+    print()
 
-        # Running IDL code at the IDL> prompt vs running it as a script causes
-        # weird differences in the evaluation, so we use a test.pro file
+    proc = subprocess.Popen(
+        ['idl'],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT
+    )
 
-        code = 'pro test\n' + code + '\nend'
-        test_file = TEST_DIR.name + '/test.pro'
-        open(test_file, 'wt').write(code)
+    # We call our test.pro module
 
-        expected_lines = [ line.strip() for line in self.expected_output.splitlines() ]
-        expected_lines = list(filter(None, expected_lines))
+    proc.stdin.write('test\nexit\n'.encode())
+    proc.stdin.flush()
+    
+    hide_output = True
 
-        log.write(f'Running {self.name}:\n')
-        for line in code_lines:
-            log.write(f'IDL> {line}\n')
-        log.write('\n')
+    print('Actual:')
+    lines = []
+    while True:
+        line = proc.stdout.readline().decode()
+        if not line:
+            break
 
-        log.write('Expected:\n')
-        for line in expected_lines:
-            log.write(f'{line}\n')
-        log.write('\n')
+        line = line.strip()
 
-        env = dict(os.environ)
-        env['IDL_PATH'] = env['IDL_PATH'] + ':' + TEST_DIR.name
+        if line is not None and not hide_output:
+            print(line)
+            if line != '':
+                lines.append(line.strip())
+        
+        # Skip the IDL header and licenseing information, which is everything
+        # above this line
+        if line == '% Compiled module: TEST.':
+            hide_output = False
+    print()
 
-        proc = subprocess.Popen(
-            ['idl'],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            env=env
-        )
+    this_test_passed = True
+ 
+    for line, expected in zip(lines, expected_lines):
+        if line != expected:
+            print(f'`{line}` != `{expected}`')
+            this_test_passed = False
+            all_tests_passed = False
 
-        # We call our test.pro module
+    if this_test_passed:
+        print('Success')
+    else:
+        print('Failure')
 
-        proc.stdin.write('test\nexit\n'.encode())
-        proc.stdin.flush()
-
-        hide_output = True
-
-        log.write('Actual:\n')
-        lines = []
-        while True:
-            line = proc.stdout.readline().decode()
-            if not line:
-                break
-
-            line = line.strip()
-
-            if line is not None and not hide_output:
-                log.write(f'{line}\n')
-                log.flush()
-                if line != '':
-                    lines.append(line.strip())
-
-            # Skip the IDL header and licenseing information, which is everything
-            # above this line
-            if line == '% Compiled module: TEST.':
-                hide_output = False
-        log.write('\n')
-
-        self.passed = True
-
-        for line, expected in zip(lines, expected_lines):
-            if line != expected:
-                log.write(f'`{line}` != `{expected}`\n')
-                self.passed = False
-
-        if self.passed:
-            log.write('Success\n')
-        else:
-            tests_failed_count += 1
-            log.write(f'Failure, see {self.logfile}\n')
-
-        log.write('\n')
-        log.write('----------------------------------------------------------------\n')
-        log.write('\n')
-
-        log.close()
-
-        self.time = datetime.now() - start_time
-
-        with open(self.logfile, 'rt') as log:
-            print(log.read(), flush=True)
-
-total_time_test = 0
-g_start_time = datetime.now()
-
-all_tests = []
-def idl_test(name, code, expected_output):
-    global all_tests
-
-    print(f'Starting {name}')
-
-    t = IDLTest(name, code, expected_output)
-    t.start()
-    all_tests.append(t)
+    print()
+    print('----------------------------------------------------------------\n')
+    print()
 
 
 #-------------------------------------------------------------------------------
 # Tree open / read / close
-idl_test('IDL-tree-read',
-f'''
-
+idl_test(f'''
+         
+testid = 'IDL-tree-read'
 mdsconnect, '{args.mdsip_server}'
 mdsopen, '{args.tree}', {args.shot}
 print, mdsvalue('{args.node1}')
@@ -416,9 +378,9 @@ f'''
 # https://github.com/MDSplus/mdsplus/issues/2580
 # Issue 2580: first connect should be on socket 0.
 # Very rare for returned status to be zero.
-idl_test('IDL-2580-connect',
-f'''
-
+idl_test(f'''
+         
+testid = 'IDL-2580-connect'         
 PASS = 1
 FAIL = 0
 BOGUS = -77
@@ -463,12 +425,12 @@ if args.database_name != '':
     # https://github.com/MDSplus/mdsplus/issues/2625
     # Issue #2625: database on socket 0, subsequent connect doesn't break proxy.
     # If the queries work, the "val" variables will be changed to a text timestamp.
-    idl_test('IDL-2625-simple',
-    f'''
+    idl_test(f'''
 
+    testid = "IDL-2625-simple"
     PASS = 1
     FAIL = 0
-    BOGUS = -77
+    BOGUS = -77                  
     proxy = '{args.database_name}'
     mdsip_server = '{args.mdsip_server}'
     query = 'select getdate()'
@@ -484,7 +446,7 @@ if args.database_name != '':
     print, '!MDS_SOCKET=', !MDS_SOCKET
     val2 = BOGUS
     d = dsql(query, val2)
-    if (typename(val2) ne "STRING") th￼en test_status = FAIL
+    if (typename(val2) ne "STRING") then test_status = FAIL
 
     if (test_status eq PASS) then begin
         print, 'SUCCESS'
@@ -513,12 +475,12 @@ if args.database_name != '':
     #---------------------------------------------------------------------------
     # https://github.com/MDSplus/mdsplus/issues/2625
     # Issue #2625: usual pattern at GA is connect, then database.
-    idl_test('IDL-2625-usual',
-    f'''
+    idl_test(f'''
 
+    testid = "IDL-2625-usual"
     PASS = 1
     FAIL = 0
-    BOGUS = -77
+    BOGUS = -77                  
     proxy = '{args.database_name}'
     mdsip_server = '{args.mdsip_server}'
     query = 'select getdate()'
@@ -561,12 +523,12 @@ if args.database_name != '':
     #---------------------------------------------------------------------------
     # https://github.com/MDSplus/mdsplus/issues/2625
     # Issue #2625: second database call not affected.
-    idl_test('IDL-2625-two-database',
-    f'''
+    idl_test(f'''
 
+    testid = "IDL-2625-two-database"
     PASS = 1
     FAIL = 0
-    BOGUS = -77
+    BOGUS = -77                  
     proxy = '{args.database_name}'
     mdsip_server = '{args.mdsip_server}'
     query = 'select getdate()'
@@ -617,13 +579,13 @@ if args.database_name != '':
     # Issue #2625: stress test database proxy with many connects.
     # NLOOPS should be more than 64 (see Issue #2638).  If the
     # disconnect works, will never exceed the concurrent limit.
-    idl_test('IDL-2625-loop',
-    f'''
+    idl_test(f'''
 
+    testid = "IDL-2625-loop"
     PASS = 1
     FAIL = 0
     BOGUS = -77
-    NLOOPS = 100
+    NLOOPS = 100                           
     proxy = '{args.database_name}'
     mdsip_server = '{args.mdsip_server}'
     query = 'select getdate()'
@@ -772,9 +734,9 @@ if args.database_name != '':
 # https://github.com/MDSplus/mdsplus/issues/2638
 # Issue #2638: crashes with too many concurrent sockets.
 # NLOOPS should be more than 64.
-idl_test('IDL-2638-loop',
-f'''
+idl_test(f'''
 
+testid = "IDL-2638-loop"
 PASS = 1
 FAIL = 0
 NLOOPS = 100
@@ -907,9 +869,9 @@ SUCCESS
 #-------------------------------------------------------------------------------
 # https://github.com/MDSplus/mdsplus/issues/2639
 # Issue #2639: mdsvalue works without a socket
-idl_test('IDL-2639-no-socket',
-f'''
-
+idl_test(f'''
+         
+testid = 'IDL-2639-no-socket'
 PASS = 1
 FAIL = 0
 DATA = '55'
@@ -943,9 +905,9 @@ SUCCESS
 #-------------------------------------------------------------------------------
 # https://github.com/MDSplus/mdsplus/issues/2639
 # Issue #2639: mdsvalue and interaction with killed socket.
-# idl_test('IDL-2639-kill-last-socket',
-# f'''
-
+# idl_test(f'''
+         
+# testid = 'IDL-2639-kill-last-socket'
 # PASS = 1
 # FAIL = 0
 # DATA = '55'
@@ -990,9 +952,9 @@ SUCCESS
 #-------------------------------------------------------------------------------
 # https://github.com/MDSplus/mdsplus/issues/2639
 # Issue #2639: mdsvalue and interaction with killed socket 0.
-idl_test('IDL-2639-kill-first-socket',
-f'''
-
+idl_test(f'''
+         
+testid = 'IDL-2639-kill-first-socket'
 PASS = 1
 FAIL = 0
 DATA = '55'
@@ -1037,9 +999,9 @@ SUCCESS
 #-------------------------------------------------------------------------------
 # https://github.com/MDSplus/mdsplus/issues/2639
 # Issue #2639: mdsvalue and kill default socket.
-idl_test('IDL-2639-kill-default-socket',
-f'''
-
+idl_test(f'''
+         
+testid = 'IDL-2639-kill-default-socket'
 PASS = 1
 FAIL = 0
 DATA = '55'
@@ -1085,9 +1047,9 @@ SUCCESS
 #-------------------------------------------------------------------------------
 # https://github.com/MDSplus/mdsplus/issues/2639
 # Issue #2639: mdsvalue, one connect, and kill socket.
-idl_test('IDL-2639-kill-single-socket',
-f'''
-
+idl_test(f'''
+         
+testid = 'IDL-2639-kill-single-socket'
 PASS = 1
 FAIL = 0
 DATA = '55'
@@ -1132,9 +1094,9 @@ SUCCESS
 # https://github.com/MDSplus/mdsplus/issues/2639
 # Issue #2639: mdsvalue, one connect, and kill 0 socket.
 # Note different behavior from IDL-2639-kill-single-socket test.
-# idl_test('IDL-2639-kill-single-zero',
-# f'''
-
+# idl_test(f'''
+         
+# testid = 'IDL-2639-kill-single-zero'
 # PASS = 1
 # FAIL = 0
 # DATA = '55'
@@ -1180,9 +1142,9 @@ SUCCESS
 # Issue #2640: disconnect returns correct status.
 # First disconnect should succeed and thus return True (1).
 # But disconnecting an already disconnected socket should return False (0).
-# idl_test('IDL-2640-status',
-# f'''
-
+# idl_test(f'''
+         
+# testid = 'IDL-2640-status'
 # PASS = 1
 # FAIL = 0
 # BOGUS = -77
@@ -1227,9 +1189,9 @@ if args.database_name != '':
 
     #---------------------------------------------------------------------------
     # Database: dbdisconnect kills database proxy
-    idl_test('IDL-db-dbdisconnect',
-    f'''
-
+    idl_test(f'''
+            
+    testid = 'IDL-db-dbdisconnect'         
     PASS = 1
     FAIL = 0
     BOGUS = -77
@@ -1283,9 +1245,9 @@ if args.database_name != '':
     # Database: regular disconnect kills database proxy.
     # GA usually has mdsconnect followed by set_database.
     # Note different behavior compared to IDL-db-dbdisconnect test.
-    idl_test('IDL-db-disconnect',
-    f'''
-
+    idl_test(f'''
+            
+    testid = 'IDL-db-disconnect'         
     PASS = 1
     FAIL = 0
     BOGUS = -77
@@ -1349,9 +1311,9 @@ if args.database_name != '':
 
     #---------------------------------------------------------------------------
     # Sockets: a sequence of socket operations.
-    idl_test('IDL-socket-sequence',
-    f'''
-
+    idl_test(f'''
+            
+    testid = 'IDL-socket-sequence'         
     PASS = 1
     FAIL = 0
     BOGUS = -77
@@ -1428,9 +1390,9 @@ if args.database_name != '':
 
     #---------------------------------------------------------------------------
     # Sockets: reset of the !MDS* system variables
-    idl_test('IDL-socket-reset',
-    f'''
-
+    idl_test(f'''
+            
+    testid = 'IDL-socket-reset'         
     PASS = 1
     FAIL = 0
     BOGUS = -77
@@ -1484,9 +1446,9 @@ if args.database_name != '':
     #---------------------------------------------------------------------------
     # Sockets: explicitly reset socket 0.
     # Note different behavior than IDL-socket-reset test.
-    idl_test('IDL-socket-reset-zero',
-    f'''
-
+    idl_test(f'''
+            
+    testid = 'IDL-socket-reset-zero'         
     PASS = 1
     FAIL = 0
     BOGUS = -77
@@ -1539,8 +1501,9 @@ if args.database_name != '':
 
 #---------------------------------------------------------------------------
 # Read: various permutations of reading data from a tree
-idl_test('IDL-read-various',
-f'''
+idl_test(f'''
+            
+testid = 'IDL-read-various'         
 
 mdsconnect, '{args.mdsip_server}'
 mdsopen, '{args.tree}', {args.shot}
@@ -1589,30 +1552,26 @@ f'''
 ''')
 
 
-# TODO: Allow for threading, use mdsip
-WRITE_TREE_DIR = tempfile.TemporaryDirectory(prefix='test_idl_', dir='/tmp')
-os.environ['default_tree_path'] = WRITE_TREE_DIR.name
-build_write_tree(args.write_tree, args.write_shot)
-
 #---------------------------------------------------------------------------
 # Write: various permutations of writing data to a tree
 #
 # Note: Uses local tree on the build server (i.e., not using mdsip).
 #       The $default_tree_path must point to the "idl/testing" directory.
-idl_test('IDL-write-various',
-f'''
+idl_test(f'''
+            
+testid = 'IDL-write-various'         
 
 mdsopen, '{args.write_tree}', '{args.write_shot}'
 mdsput, 'A_TEXT', ' "string_a" '
 mdsput, 'B_NUM', '22'
 mdsput, 'C_SIGNAL', 'build_signal([10,-10,5,-5,0],[10.2,-10.2,5.4,-5.4,0.0], [0 .. 4])'
-mdsput, '\TOP.SUBTREE_1:D_TEXT', ' "string_d" '
+mdsput, '\\TOP.SUBTREE_1:D_TEXT', ' "string_d" '
 mdsput, 'SUBTREE_1.E_UNITS', 'build_with_units(55, "volts")'
 mdsset_def, 'SUBTREE_1'
 mdsput, '.-.SUBTREE_2:F_NUM', '66'
-mdsput, '\TAG_G', '77'
+mdsput, '\\TAG_G', '77'
 mdsclose, '{args.write_tree}', '{args.write_shot}'
-
+         
 mdsopen, '{args.write_tree}', '{args.write_shot}'
 print, mdsvalue('A_TEXT')
 print, mdsvalue('B_NUM')
@@ -1651,48 +1610,6 @@ volts
 77
 
 ''')
-
-all_tests_passed = True
-for test in all_tests:
-    test.join()
-
-    if not test.passed:
-        print(f'Test {test.name} failed, see {test.logfile}')
-        all_tests_passed = False
-
-total_time_test = datetime.now() - g_start_time
-
-import xml.etree.ElementTree as xml
-
-root = xml.Element('testsuites')
-root.attrib['time'] = str(total_time_test)
-root.attrib['tests'] = str(len(all_tests))
-root.attrib['failures'] = str(tests_failed_count)
-
-testsuite = xml.SubElement(root, 'testsuite')
-# testsuite.attrib['time'] = str(total_time_test)
-testsuite.attrib['name'] = 'IDL test suite'
-
-for test in all_tests:
-    testcase = xml.SubElement(testsuite, 'testcase')
-    testcase.attrib['name'] = test.name
-    testcase.attrib['time'] = str(test.time.total_seconds())
-
-    system_out = xml.SubElement(testcase, 'system-out')
-    system_out.text = open(test.logfile, 'rt').read()
-    
-    # The BEL character causes issues when loaded into Jenkins
-    system_out.text = system_out.text.replace('\x07', '')
-
-    if not test.passed:
-        failure = xml.SubElement(testcase, 'failure')
-        failure.attrib['message'] = 'Failed'
-
-
-junit_filename = 'mdsplus-junit.xml'
-print(f'Writing jUnit XML to {junit_filename}')
-with open(junit_filename, 'wb') as file:
-    file.write(xml.tostring(root))
 
 if not all_tests_passed:
     exit(1)

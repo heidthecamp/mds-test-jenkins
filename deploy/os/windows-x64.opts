@@ -2,4 +2,4 @@
 --platform=windows --arch=x64 --distname=Windows
 --toolchain=/usr/share/mingw/toolchain-mingw64.cmake
 -DTEST_WITH_WINE=ON -DWINE_PYTHON=/python27/python.exe
--DENABLE_IDL=OFF -DENABLE_SYBASE=OFF
+-DENABLE_IDL=OFF

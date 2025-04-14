@@ -13,14 +13,12 @@
 #
 # The following variables can be set as arguments
 #
-#   IDL_ROOT_DIR
+#   IDL_ROOT
 #
 
 find_path(
     IDL_INCLUDE_DIRS
     NAMES export.h
-    PATHS 
-        ${IDL_ROOT_DIR}
     PATH_SUFFIXES
         external
 )
@@ -37,7 +35,7 @@ if(IDL_FOUND)
     if(NOT TARGET IDL::IDL)
 
         add_library(IDL::IDL INTERFACE IMPORTED)
-        
+
         set_target_properties(
             IDL::IDL PROPERTIES
             INTERFACE_INCLUDE_DIRECTORIES "${IDL_INCLUDE_DIRS}"

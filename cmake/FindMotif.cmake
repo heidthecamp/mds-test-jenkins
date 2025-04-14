@@ -23,86 +23,68 @@
 #
 # The following variables can be set as arguments
 #
-#   Motif_ROOT_DIR
+#   Motif_ROOT
 #
 
 find_path(
     Motif_Xm_INCLUDE_DIR
     NAMES Xm/Xm.h
-    PATHS 
-        ${Motif_ROOT_DIR}
-    PATH_SUFFIXES 
+    PATH_SUFFIXES
         include
 )
 
 find_path(
     Motif_Mrm_INCLUDE_DIR
     NAMES Mrm/MrmPublic.h
-    PATHS 
-        ${Motif_ROOT_DIR}
-    PATH_SUFFIXES 
+    PATH_SUFFIXES
         include
 )
 
 find_path(
     Motif_X11_INCLUDE_DIR
     NAMES X11/X.h
-    PATHS 
-        ${Motif_ROOT_DIR}
-    PATH_SUFFIXES 
+    PATH_SUFFIXES
         include
 )
 
 find_path(
     Motif_Xt_INCLUDE_DIR
     NAMES X11/Core.h
-    PATHS 
-        ${Motif_ROOT_DIR}
-    PATH_SUFFIXES 
+    PATH_SUFFIXES
         include
 )
 
 find_library(
     Motif_Xm_LIBRARY
     NAMES Xm
-    PATHS 
-        ${Motif_ROOT_DIR}
-    PATH_SUFFIXES 
+    PATH_SUFFIXES
         lib
 )
 
 find_library(
     Motif_Mrm_LIBRARY
     NAMES Mrm
-    PATHS 
-        ${Motif_ROOT_DIR}
-    PATH_SUFFIXES 
+    PATH_SUFFIXES
         lib
 )
 
 find_library(
     Motif_X11_LIBRARY
     NAMES X11
-    PATHS 
-        ${Motif_ROOT_DIR}
-    PATH_SUFFIXES 
+    PATH_SUFFIXES
         lib
 )
 
 find_library(
     Motif_Xt_LIBRARY
     NAMES Xt
-    PATHS 
-        ${Motif_ROOT_DIR}
-    PATH_SUFFIXES 
+    PATH_SUFFIXES
         lib
 )
 
 find_program(
     uil_EXECUTABLE
     NAMES uil
-    PATHS
-        ${Motif_ROOT_DIR}
     PATH_SUFFIXES
         bin
 )
@@ -148,9 +130,9 @@ if(Motif_FOUND)
                 INTERFACE_LINK_LIBRARIES "${Motif_LIBRARIES}"
                 INTERFACE_INCLUDE_DIRECTORIES "${Motif_INCLUDE_DIRS}"
         )
-        
+
     endif()
-    
+
 endif()
 
 mark_as_advanced(

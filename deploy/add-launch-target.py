@@ -34,7 +34,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 target_name = args.name
-command = args.command.split(';')
+command = args.command.replace('\\ ', ' ').split(';') # Undo CMake's overzealous string escaping
 environment_modifications = args.environment.split(';')
 cwd = args.cwd
 
@@ -114,7 +114,10 @@ if platform.system() == 'Windows':
     data['type'] = 'cppvsdbg'
     data['console'] = 'integratedTerminal'
 else:
-    data['externalConsole'] = False
+    if platform.system() == 'Darwin':
+        data['externalConsole'] = True
+    else:
+        data['externalConsole'] = False
 
 if platform.system() == 'Darwin':
     data['MIMode'] = 'lldb'

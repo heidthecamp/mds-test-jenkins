@@ -1225,6 +1225,20 @@ AH_VERBATIM([_WIN32], [
 #endif
 ])
 
+AH_VERBATIM([MACOS_ARM64],[
+// This define is used to bracket Apple Silicon specific code.
+#if defined(__APPLE__) && defined(__aarch64__)
+#define MACOS_ARM64
+#endif
+])
+
+AH_VERBATIM([MDSPLUS_USE_FFI],[
+// List of platforms that need libffi for variadic functions.
+#if defined(MACOS_ARM64)
+#define MDSPLUS_USE_FFI
+#endif  
+])
+
 dnl add here what goes on bottom of mdsconfig.h
 AH_BOTTOM(
 #endif // _MSC_VER else

@@ -15,7 +15,7 @@
 #
 # The following variables can be set as arguments
 #
-#   Sybase_ROOT_DIR
+#   Sybase_ROOT
 #
 
 find_package(PkgConfig QUIET)
@@ -33,9 +33,7 @@ else()
     find_path(
         Sybase_INCLUDE_DIRS
         NAMES sybdb.h
-        PATHS 
-            ${Sybase_ROOT_DIR}
-        PATH_SUFFIXES 
+        PATH_SUFFIXES
             include
             include/freetds
     )
@@ -43,9 +41,7 @@ else()
     find_library(
         Sybase_LIBRARIES
         NAMES sybdb
-        PATHS 
-            ${Sybase_ROOT_DIR}
-        PATH_SUFFIXES 
+        PATH_SUFFIXES
             lib
     )
 
@@ -54,7 +50,7 @@ endif()
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(
     Sybase
-    REQUIRED_VARS 
+    REQUIRED_VARS
         Sybase_LIBRARIES
         Sybase_INCLUDE_DIRS
 )
@@ -70,7 +66,7 @@ if(Sybase_FOUND)
     if(NOT TARGET Sybase::Sybase)
 
         add_library(Sybase::Sybase INTERFACE IMPORTED)
-        
+
         set_target_properties(
             Sybase::Sybase
             PROPERTIES

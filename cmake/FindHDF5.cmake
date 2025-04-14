@@ -14,7 +14,7 @@
 #
 # The following variables can be set as arguments
 #
-#   HDF5_ROOT_DIR
+#   HDF5_ROOT
 #
 
 find_package(PkgConfig QUIET)
@@ -24,8 +24,7 @@ pkg_check_modules(_HDF5_PC QUIET hdf5)
 find_path(
     HDF5_INCLUDE_DIRS
     NAMES hdf5.h
-    PATHS
-        ${HDF5_ROOT_DIR}
+    HINTS
         ${_HDF5_PC_INCLUDE_DIRS}
     PATH_SUFFIXES
         include
@@ -34,8 +33,7 @@ find_path(
 find_library(
     HDF5_LIBRARIES
     NAMES hdf5
-    PATHS
-        ${HDF5_ROOT_DIR}
+    HINTS
         ${_HDF5_PC_LIBRARY_DIRS}
     PATH_SUFFIXES
         lib
@@ -63,7 +61,7 @@ if(HDF5_FOUND)
         )
 
     endif()
-    
+
 endif()
 
 mark_as_advanced(

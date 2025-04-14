@@ -17,15 +17,15 @@
 #
 # The following variables can be set as arguments
 #
-#   Valgrind_ROOT_DIR
+#   Valgrind_ROOT
 #   Valgrind_REQUESTED_TOOL_LIST
 #
 
 find_program(
     Valgrind_EXECUTABLE
     NAMES valgrind
-    PATHS ${Valgrind_ROOT_DIR}
-    PATH_SUFFIXES bin
+    PATH_SUFFIXES
+        bin
 )
 
 if(Valgrind_EXECUTABLE)

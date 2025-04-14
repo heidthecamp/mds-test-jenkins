@@ -21,7 +21,7 @@
 #
 # The following variables can be set as arguments
 #
-#   Globus_ROOT_DIR
+#   Globus_ROOT
 #
 
 find_package(PkgConfig QUIET)
@@ -40,9 +40,8 @@ pkg_check_modules(
 find_path(
     Globus_INCLUDE_DIRS
     NAMES globus_common.h
-    PATHS 
-        ${Globus_ROOT_DIR}
-        ${_Globus_PC_INCLUDE_DIRS}
+    HINTS
+        ${_Globus_PC_INCLUDE_DIRS
     PATH_SUFFIXES
         include
 )
@@ -50,70 +49,63 @@ find_path(
 find_library(
     Globus_globus_common_LIBRARY
     NAMES globus_common
-    PATHS 
-        ${Globus_ROOT_DIR}
+    HINTS
         ${_Globus_PC_LIBRARY_DIRS}
-    PATH_SUFFIXES 
+    PATH_SUFFIXES
         lib
 )
 
 find_library(
     Globus_globus_gridmap_callout_error_LIBRARY
     NAMES globus_gridmap_callout_error
-    PATHS 
-        ${Globus_ROOT_DIR}
+    HINTS
         ${_Globus_PC_LIBRARY_DIRS}
-    PATH_SUFFIXES 
+    PATH_SUFFIXES
         lib
 )
 
 find_library(
     Globus_globus_gss_assist_LIBRARY
     NAMES globus_gss_assist
-    PATHS 
-        ${Globus_ROOT_DIR}
+    HINTS
         ${_Globus_PC_LIBRARY_DIRS}
-    PATH_SUFFIXES 
+    PATH_SUFFIXES
         lib
 )
 
 find_library(
     Globus_globus_gssapi_error_LIBRARY
     NAMES globus_gssapi_error
-    PATHS 
-        ${Globus_ROOT_DIR}
+    HINTS
         ${_Globus_PC_LIBRARY_DIRS}
-    PATH_SUFFIXES 
+    PATH_SUFFIXES
         lib
 )
 
 find_library(
     Globus_globus_gssapi_gsi_LIBRARY
     NAMES globus_gssapi_gsi
-    PATHS 
-        ${Globus_ROOT_DIR}
+    HINTS
         ${_Globus_PC_LIBRARY_DIRS}
-    PATH_SUFFIXES 
+    PATH_SUFFIXES
         lib
 )
 
 find_library(
     Globus_globus_xio_LIBRARY
     NAMES globus_xio
-    PATHS 
-        ${Globus_ROOT_DIR}
+    HINTS
         ${_Globus_PC_LIBRARY_DIRS}
-    PATH_SUFFIXES 
+    PATH_SUFFIXES
         lib
 )
 
 find_library(
     Globus_globus_xio_gsi_driver_LIBRARY
     NAMES globus_xio_gsi_driver
-    PATHS 
-        ${Globus_ROOT_DIR}
+    HINTS
         ${_Globus_PC_LIBRARY_DIRS}
-    PATH_SUFFIXES 
+    PATH_SUFFIXES
         lib
 )
 
@@ -148,12 +140,12 @@ if(Globus_FOUND)
         add_library(Globus::Globus INTERFACE IMPORTED)
 
         set_target_properties(
-            Globus::Globus 
+            Globus::Globus
             PROPERTIES
                 INTERFACE_INCLUDE_DIRECTORIES "${Globus_INCLUDE_DIRS}"
                 INTERFACE_LINK_LIBRARIES "${Globus_LIBRARIES}"
         )
-        
+
     endif()
 
 endif()
