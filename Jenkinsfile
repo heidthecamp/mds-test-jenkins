@@ -30,7 +30,7 @@ def testStage(os) {
     if (os.startsWith("macosx-")) { //  || OS.startsWith("windows-")
         // Required to isolate runs on systems that don't have docker networks to do the isolation
         def offset = (EXECUTOR_NUMBER as int) * 1000
-        extraArgs += "-DTEST_OFFSET=${offset}"
+        extraArgs += "-DTEST_PORT_OFFSET=${offset}"
     }
     else {
         extraArgs += "--dockernetwork=jenkins-${EXECUTOR_NUMBER}"

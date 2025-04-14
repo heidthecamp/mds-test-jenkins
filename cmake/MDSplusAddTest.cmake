@@ -1,6 +1,6 @@
 include_guard(GLOBAL)
 
-set(MDSPLUS_TEST_INDEX ${TEST_OFFSET} CACHE STRING "" FORCE)
+set(MDSPLUS_TEST_INDEX 0 CACHE STRING "" FORCE)
 
 #
 # mdsplus_add_test(NAME <name>
@@ -156,13 +156,15 @@ function(mdsplus_add_test)
     endif()
 
     set(_index ${MDSPLUS_TEST_INDEX})
-    math(EXPR _event_port "4000 + ${_index}")
+    math(EXPR _event_port "4000 + ${TEST_PORT_OFFSET} + ${_index}")
+    math(EXPR _test_port_offset "${TEST_PORT_OFFSET}")
 
     list(APPEND _env_mods ${ARGS_ENVIRONMENT_MODIFICATION})
 
     set(_base_env_mods
         ${_env_mods}
         "TEST_INDEX=set:${_index}"
+        "TEST_PORT_OFFSET=set:${_test_port_offset}"
         "mdsevent_port=set:${_event_port}"
         "MDSIP_CLIENT_LOCAL_LOGFILE=set:${CMAKE_CURRENT_BINARY_DIR}/mdsip-local-${ARGS_NAME}-${_index}.log"
     )
@@ -201,11 +203,11 @@ function(mdsplus_add_test)
         endforeach()
 
         # Each variant of tests gets a unique port range
-        set(_test_port_offset 1000)
+        math(EXPR _test_port_offset "${_test_port_offset} + 1000")
 
         foreach(_tool IN LISTS Valgrind_TOOL_LIST)
             set(_target_tool "${_target}-${_tool}")
-        list(APPEND _target_list "${_target_tool}")
+            list(APPEND _target_list "${_target_tool}")
 
             string(REPLACE "-" "_" _tool_no_dash ${_tool})
 

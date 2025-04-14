@@ -180,8 +180,8 @@ if(BUILD_TESTING)
     )
 
     mdsplus_option(
-        TEST_OFFSET STRING
-        "An offset used to isolate multiple build/test runs on the same machine. Used to set $TEST_INDEX and $mdsevent_port."
+        TEST_PORT_OFFSET STRING
+        "An offset used to isolate multiple build/test runs on the same machine. Used to set $TEST_PORT_OFFSET and $mdsevent_port."
         DEFAULT 0
     )
     
