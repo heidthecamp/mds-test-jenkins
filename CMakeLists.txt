@@ -178,6 +178,12 @@ if(BUILD_TESTING)
             ${_sanitize_flavor_list}
         DEFAULT OFF
     )
+
+    mdsplus_option(
+        TEST_OFFSET STRING
+        "An offset used to isolate multiple build/test runs on the same machine. Used to set $TEST_INDEX and $mdsevent_port."
+        DEFAULT 0
+    )
     
     mdsplus_option(
         GENERATE_VSCODE_LAUNCH_JSON BOOL

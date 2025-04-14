@@ -24,10 +24,22 @@ def setupStage() {
 }
 
 def testStage(os) {
+
+    def extraArgs = ""
+
+    if (os.startsWith("macosx-")) { //  || OS.startsWith("windows-")
+        // Required to isolate runs on systems that don't have docker networks to do the isolation
+        def offset = (EXECUTOR_NUMBER as int) * 1000
+        extraArgs += "-DTEST_OFFSET=${offset}"
+    }
+    else {
+        extraArgs += "--dockernetwork=jenkins-${EXECUTOR_NUMBER}"
+    }
+
     return {
         stage("Build & Test") {
             try {
-                sh "deploy/build.py -j --os=${os} --build --test -DCMAKE_BUILD_TYPE=Debug --output-junit --dockernetwork=jenkins-${EXECUTOR_NUMBER}"
+                sh "deploy/build.py -j --os=${os} --build --test -DCMAKE_BUILD_TYPE=Debug --output-junit ${extraArgs}"
             }
             finally {
                 junit skipPublishingChecks: true, testResults: "workspace-${os}/mdsplus-junit.xml", keepLongStdio: true
