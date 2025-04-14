@@ -18,8 +18,8 @@ def setupStage() {
             cleanWs disableDeferredWipeout: true, deleteDirs: true
             
             retry(3) {
-                // checkout scm
-                git branch: 'main', url: 'https://github.com/heidthecamp/mds-test-jenkins'
+                checkout scm
+                // git branch: 'main', url: 'https://github.com/heidthecamp/mds-test-jenkins'
             }
         }
     }
