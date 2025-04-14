@@ -41,7 +41,7 @@ find_path(
     Globus_INCLUDE_DIRS
     NAMES globus_common.h
     HINTS
-        ${_Globus_PC_INCLUDE_DIRS
+        ${_Globus_PC_INCLUDE_DIRS}
     PATH_SUFFIXES
         include
 )

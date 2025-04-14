@@ -1,9 +1,10 @@
 def OSList = [
     ['Ubuntu 24.04 (amd64)', 'ubuntu-24-amd64', 'docker && linux-amd64'],
-    ['Ubuntu 24.04 (arm64)', 'ubuntu-24-arm64', 'docker && linux-aarch64'],
     ['RHEL 9 (x86_64)',      'rhel-9-x86_64',   'docker && linux-amd64'],
     ['Debian 12 (amd64)',    'debian-12-amd64', 'docker && linux-amd64'],
     ['Windows (x64)',        'windows-x64',     'docker && linux-amd64'],
+    ['MacOSX (brew)',        'macosx-brew',     'macosx'],
+    ['MacOSX (macports)',    'macosx-macports', 'macosx'],
 ]
 
 def setupStage() {
@@ -17,10 +18,7 @@ def setupStage() {
             // This shouldn't be needed, but just in case
             cleanWs disableDeferredWipeout: true, deleteDirs: true
             
-            retry(3) {
-                checkout scm
-                // git branch: 'main', url: 'https://github.com/heidthecamp/mds-test-jenkins'
-            }
+            unstash 'source'
         }
     }
 }
@@ -116,9 +114,6 @@ distributions['IDL'] = localTest('IDL', {
                     set -x
                     ./idl/testing/run_tests.py
                 """
-                sh """
-                    false
-                """
             }
         }
         finally {
@@ -152,7 +147,11 @@ pipeline {
             steps {
                 sh 'printenv'
                 
-                echo "Placeholder"
+                retry(3) {
+                    checkout scm;
+                    // By default it excludes .git/
+                    stash name: 'source', includes: '**', useDefaultExcludes: false
+                }
             }
         }
         
@@ -173,6 +172,8 @@ pipeline {
                     }
                     
                     sh "ls"
+                    
+                    archiveArtifacts artifacts: "*.tgz,*.exe", followSymlinks: false
                     
                     cleanWs disableDeferredWipeout: true, deleteDirs: true
                 }

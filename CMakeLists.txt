@@ -722,10 +722,13 @@ if(NOT DEFINED Python_EXECUTABLE AND NOT PYTHON STREQUAL "")
     mark_as_advanced(Python_EXECUTABLE)
 endif()
 
-find_package(Python COMPONENTS Interpreter Development.Embed REQUIRED)
-
 # Used to easily determine Python_LIBRARIES
-# find_package(Python COMPONENTS Development.Embed REQUIRED)
+set(_python_development_embed Development.Embed)
+if(WIN32)
+    unset(_python_development_embed)
+endif()
+
+find_package(Python COMPONENTS Interpreter ${_python_development_embed} REQUIRED)
 
 set(PYTHON "${Python_EXECUTABLE}")
 set(PyLib "${Python_LIBRARIES}")
