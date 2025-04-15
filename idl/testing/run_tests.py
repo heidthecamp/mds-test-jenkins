@@ -366,6 +366,7 @@ class IDLTest(threading.Thread):
         log.close()
 
         self.time = datetime.now() - start_time
+        
         with open(self.logfile, 'rt') as log:
             print(log.read(), flush=True)
 
@@ -1670,7 +1671,7 @@ root.attrib['failures'] = str(tests_failed_count)
 
 testsuite = xml.SubElement(root, 'testsuite')
 # testsuite.attrib['time'] = str(total_time_test)
-testsuite.attrib['name'] = args.junit_suite_name
+testsuite.attrib['name'] = 'IDL test suite'
 
 for test in all_tests:
     testcase = xml.SubElement(testsuite, 'testcase')
@@ -1695,4 +1696,3 @@ with open(junit_filename, 'wb') as file:
 
 if not all_tests_passed:
     exit(1)
-    
