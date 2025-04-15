@@ -366,7 +366,7 @@ class IDLTest(threading.Thread):
         log.close()
 
         self.time = datetime.now() - start_time
-        
+
         with open(self.logfile, 'rt') as log:
             print(log.read(), flush=True)
 
@@ -1679,17 +1679,17 @@ for test in all_tests:
     testcase.attrib['time'] = str(test.time)
 
     system_out = xml.SubElement(testcase, 'system-out')
-    system_out.text = open(test['log'], 'rt').read()
+    system_out.text = open(test.log, 'rt').read()
 
     # The BEL character causes issues when loaded into Jenkins
     system_out.text = system_out.text.replace('\x07', '')
 
-    if not test['passed']:
+    if not test.passed:
         failure = xml.SubElement(testcase, 'failure')
         failure.attrib['message'] = 'Failed'
 
 
-junit_filename = os.path.join(args.workspace, 'mdsplus-junit.xml')
+junit_filename = 'mdsplus-junit.xml'
 print(f'Writing jUnit XML to {junit_filename}')
 with open(junit_filename, 'wb') as file:
     file.write(xml.tostring(root))
